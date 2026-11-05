@@ -11,14 +11,18 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 /**
  * Base class for end-to-end tests of the HTTP API against a real PostgreSQL (Testcontainers).
  * Tables are emptied before each test so tests never depend on each other's data.
+ * All subclasses share the same configuration, hence one Spring context and one container.
  */
-@SpringBootTest
+@SpringBootTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @AutoConfigureMockMvc
-@Import({TestcontainersConfiguration.class, DatabaseCleaner.class})
+@Import({TestcontainersConfiguration.class, DatabaseCleaner.class, Fixtures.class, SqlStatistics.class})
 public abstract class IntegrationTest {
 
     @Autowired
     protected MockMvcTester mvc;
+
+    @Autowired
+    protected Fixtures fixtures;
 
     @Autowired
     private DatabaseCleaner databaseCleaner;

@@ -1,0 +1,222 @@
+package dev.atelierflow.workorder;
+
+import dev.atelierflow.common.error.BusinessRuleException;
+import dev.atelierflow.common.persistence.BaseEntity;
+import dev.atelierflow.equipment.Equipment;
+import dev.atelierflow.user.AppUser;
+import dev.atelierflow.user.Role;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Objects;
+
+/**
+ * A maintenance job on one machine (aggregate root).
+ *
+ * <p>Every state change goes through a business method ({@link #plan}, {@link #start}, {@link #complete},
+ * {@link #cancel}, {@link #unplan}) that checks the transition against {@link WorkOrderStatus} and the
+ * preconditions of the target state, then records what the state requires (assignee, timestamps,
+ * time spent…). An invalid call leaves the entity untouched.
+ */
+@Entity
+@Table(name = "work_order")
+public class WorkOrder extends BaseEntity {
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "equipment_id", nullable = false, updatable = false)
+    private Equipment equipment;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, updatable = false, length = 12)
+    private WorkOrderType type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 12)
+    private WorkOrderStatus status = WorkOrderStatus.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private Priority priority;
+
+    @Column(nullable = false, length = 150)
+    private String title;
+
+    private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assignee_id")
+    private AppUser assignee;
+
+    /** When the need was reported (breakdown time for a corrective work order). */
+    @Column(nullable = false, updatable = false)
+    private Instant reportedAt;
+
+    private LocalDate scheduledFor;
+    private Instant startedAt;
+    private Instant completedAt;
+    private Integer timeSpentMinutes;
+    private String resolution;
+    private Instant cancelledAt;
+    private String cancellationReason;
+
+    /** Required by JPA. */
+    protected WorkOrder() {
+    }
+
+    public WorkOrder(Equipment equipment, WorkOrderType type, Priority priority, String title, String description,
+                     Instant reportedAt) {
+        this.equipment = Objects.requireNonNull(equipment);
+        this.type = Objects.requireNonNull(type);
+        this.priority = Objects.requireNonNull(priority);
+        this.title = Objects.requireNonNull(title);
+        this.description = description;
+        this.reportedAt = Objects.requireNonNull(reportedAt);
+    }
+
+    /** OPEN → PLANNED: a technician is assigned and a date is set. */
+    public void plan(AppUser technician, LocalDate scheduledFor) {
+        Objects.requireNonNull(technician);
+        Objects.requireNonNull(scheduledFor);
+        ensureCanMoveTo(WorkOrderStatus.PLANNED);
+        if (!technician.hasRole(Role.TECHNICIAN)) {
+            throw new BusinessRuleException("ASSIGNEE_NOT_TECHNICIAN",
+                    "Only a technician can be assigned to a work order");
+        }
+        this.assignee = technician;
+        this.scheduledFor = scheduledFor;
+        this.status = WorkOrderStatus.PLANNED;
+    }
+
+    /** PLANNED → OPEN: back to the to-do pile, the assignment is withdrawn. */
+    public void unplan() {
+        ensureCanMoveTo(WorkOrderStatus.OPEN);
+        this.assignee = null;
+        this.scheduledFor = null;
+        this.status = WorkOrderStatus.OPEN;
+    }
+
+    /** PLANNED → IN_PROGRESS: the technician begins the intervention. */
+    public void start(Instant now) {
+        ensureCanMoveTo(WorkOrderStatus.IN_PROGRESS);
+        this.startedAt = notBefore(now, reportedAt);
+        this.status = WorkOrderStatus.IN_PROGRESS;
+    }
+
+    /** IN_PROGRESS → DONE: the intervention is over; its duration and outcome are mandatory. */
+    public void complete(int timeSpentMinutes, String resolution, Instant now) {
+        ensureCanMoveTo(WorkOrderStatus.DONE);
+        if (timeSpentMinutes <= 0) {
+            throw new BusinessRuleException("TIME_SPENT_REQUIRED", "The time spent must be positive");
+        }
+        if (resolution == null || resolution.isBlank()) {
+            throw new BusinessRuleException("RESOLUTION_REQUIRED", "Describe what was done to close the work order");
+        }
+        this.timeSpentMinutes = timeSpentMinutes;
+        this.resolution = resolution;
+        this.completedAt = notBefore(now, startedAt);
+        this.status = WorkOrderStatus.DONE;
+    }
+
+    /** OPEN or PLANNED → CANCELLED, with a mandatory reason (kept for the history). */
+    public void cancel(String reason, Instant now) {
+        ensureCanMoveTo(WorkOrderStatus.CANCELLED);
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessRuleException("CANCELLATION_REASON_REQUIRED", "A cancellation reason is required");
+        }
+        this.cancellationReason = reason;
+        this.cancelledAt = now;
+        this.status = WorkOrderStatus.CANCELLED;
+    }
+
+    /** Title, description and priority can be corrected until the work order is closed. */
+    public void updateDetails(String title, String description, Priority priority) {
+        if (status.isTerminal()) {
+            throw new BusinessRuleException("WORK_ORDER_CLOSED", "A closed work order can no longer be modified");
+        }
+        this.title = Objects.requireNonNull(title);
+        this.description = description;
+        this.priority = Objects.requireNonNull(priority);
+    }
+
+    public boolean isActive() {
+        return WorkOrderStatus.ACTIVE.contains(status);
+    }
+
+    private void ensureCanMoveTo(WorkOrderStatus target) {
+        if (!status.canTransitionTo(target)) {
+            throw new InvalidTransitionException(status, target);
+        }
+    }
+
+    /** Guards the chronology against clock skew between the client that reported and the server. */
+    private static Instant notBefore(Instant instant, Instant lowerBound) {
+        return instant.isBefore(lowerBound) ? lowerBound : instant;
+    }
+
+    public Equipment getEquipment() {
+        return equipment;
+    }
+
+    public WorkOrderType getType() {
+        return type;
+    }
+
+    public WorkOrderStatus getStatus() {
+        return status;
+    }
+
+    public Priority getPriority() {
+        return priority;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public AppUser getAssignee() {
+        return assignee;
+    }
+
+    public Instant getReportedAt() {
+        return reportedAt;
+    }
+
+    public LocalDate getScheduledFor() {
+        return scheduledFor;
+    }
+
+    public Instant getStartedAt() {
+        return startedAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public Integer getTimeSpentMinutes() {
+        return timeSpentMinutes;
+    }
+
+    public String getResolution() {
+        return resolution;
+    }
+
+    public Instant getCancelledAt() {
+        return cancelledAt;
+    }
+
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+}

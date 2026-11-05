@@ -8,6 +8,7 @@ import dev.atelierflow.equipment.dto.EquipmentFilter;
 import dev.atelierflow.equipment.dto.EquipmentResponse;
 import dev.atelierflow.equipment.dto.UpdateEquipmentRequest;
 import java.util.List;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,9 +59,20 @@ public class EquipmentService {
         return mapper.toResponse(repository.saveAndFlush(equipment));
     }
 
+    /**
+     * Deletes a machine that has no maintenance history. The rule is enforced by the foreign key of
+     * the work orders (ON DELETE RESTRICT) rather than by a query here, which keeps the equipment
+     * module independent from the work order module and is also safe against concurrent inserts.
+     */
     @Transactional
     public void delete(Long id) {
         repository.delete(findOrThrow(id));
+        try {
+            repository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessRuleException("EQUIPMENT_HAS_HISTORY",
+                    "Equipment %d has work orders and cannot be deleted".formatted(id));
+        }
     }
 
     private Equipment findOrThrow(Long id) {

@@ -74,7 +74,7 @@ class EquipmentController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @Operation(summary = "Remove a machine")
+    @Operation(summary = "Remove a machine (refused with 409 once it has work orders)")
     void delete(@PathVariable Long id) {
         service.delete(id);
     }
