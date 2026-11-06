@@ -1,5 +1,7 @@
 package dev.atelierflow.equipment;
 
+import dev.atelierflow.auth.AdminOnly;
+import dev.atelierflow.auth.ManagerOrAdmin;
 import dev.atelierflow.common.web.PageResponse;
 import dev.atelierflow.equipment.dto.CreateEquipmentRequest;
 import dev.atelierflow.equipment.dto.EquipmentFilter;
@@ -58,6 +60,7 @@ class EquipmentController {
     }
 
     @PostMapping
+    @ManagerOrAdmin
     @Operation(summary = "Register a machine")
     ResponseEntity<EquipmentResponse> create(@Valid @RequestBody CreateEquipmentRequest request) {
         EquipmentResponse created = service.create(request);
@@ -67,12 +70,14 @@ class EquipmentController {
     }
 
     @PutMapping("/{id}")
+    @ManagerOrAdmin
     @Operation(summary = "Update the editable attributes of a machine")
     EquipmentResponse update(@PathVariable Long id, @Valid @RequestBody UpdateEquipmentRequest request) {
         return service.update(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @AdminOnly
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove a machine (refused with 409 once it has work orders)")
     void delete(@PathVariable Long id) {

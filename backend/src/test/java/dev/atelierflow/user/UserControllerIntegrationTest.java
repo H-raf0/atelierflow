@@ -15,7 +15,8 @@ class UserControllerIntegrationTest extends IntegrationTest {
 
         assertThat(mvc.get().uri("/api/users"))
                 .hasStatusOk()
-                .bodyJson().extractingPath("$[*].username").asArray().containsExactly("alice", "boss", "zoe");
+                .bodyJson().extractingPath("$[*].username").asArray()
+                .containsExactly("admin-test", "alice", "boss", "zoe");
         assertThat(mvc.get().uri("/api/users?role=TECHNICIAN"))
                 .hasStatusOk()
                 .bodyJson().extractingPath("$[*].username").asArray().containsExactly("alice", "zoe");

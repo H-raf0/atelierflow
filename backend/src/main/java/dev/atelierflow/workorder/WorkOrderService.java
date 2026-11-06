@@ -1,13 +1,18 @@
 package dev.atelierflow.workorder;
 
+import dev.atelierflow.auth.AuthenticatedUser;
+import dev.atelierflow.common.error.ForbiddenOperationException;
 import dev.atelierflow.common.error.ResourceNotFoundException;
 import dev.atelierflow.common.web.PageResponse;
 import dev.atelierflow.equipment.Equipment;
 import dev.atelierflow.equipment.EquipmentRepository;
 import dev.atelierflow.equipment.EquipmentStatus;
 import dev.atelierflow.user.AppUser;
+import dev.atelierflow.user.Role;
 import dev.atelierflow.user.UserRepository;
+import dev.atelierflow.workorder.dto.AddCommentRequest;
 import dev.atelierflow.workorder.dto.CancelWorkOrderRequest;
+import dev.atelierflow.workorder.dto.CommentResponse;
 import dev.atelierflow.workorder.dto.CompleteWorkOrderRequest;
 import dev.atelierflow.workorder.dto.CreateWorkOrderRequest;
 import dev.atelierflow.workorder.dto.PlanWorkOrderRequest;
@@ -42,14 +47,16 @@ public class WorkOrderService {
             .thenComparing(WorkOrder::getReportedAt);
 
     private final WorkOrderRepository workOrders;
+    private final WorkOrderCommentRepository comments;
     private final EquipmentRepository equipments;
     private final UserRepository users;
     private final WorkOrderMapper mapper;
     private final Clock clock;
 
-    public WorkOrderService(WorkOrderRepository workOrders, EquipmentRepository equipments, UserRepository users,
-                            WorkOrderMapper mapper, Clock clock) {
+    public WorkOrderService(WorkOrderRepository workOrders, WorkOrderCommentRepository comments,
+                            EquipmentRepository equipments, UserRepository users, WorkOrderMapper mapper, Clock clock) {
         this.workOrders = workOrders;
+        this.comments = comments;
         this.equipments = equipments;
         this.users = users;
         this.mapper = mapper;
@@ -74,8 +81,29 @@ public class WorkOrderService {
         return mapper.toDetail(findOrThrow(id));
     }
 
+    public List<CommentResponse> comments(Long id) {
+        if (!workOrders.existsById(id)) {
+            throw new ResourceNotFoundException("Work order", id);
+        }
+        return comments.findByWorkOrderIdOrderByCreatedAtAscIdAsc(id).stream().map(mapper::toComment).toList();
+    }
+
     @Transactional
-    public WorkOrderDetail create(CreateWorkOrderRequest request) {
+    public CommentResponse addComment(Long id, AddCommentRequest request, AuthenticatedUser caller) {
+        WorkOrder workOrder = findOrThrow(id);
+        // getReferenceById returns a lazy proxy: the INSERT only needs the author's id
+        var comment = new WorkOrderComment(workOrder, users.getReferenceById(caller.id()), request.body());
+        comments.saveAndFlush(comment);
+        return mapper.toComment(comment);
+    }
+
+    /** Anyone can report a breakdown; preventive work orders are planned by managers (or generated). */
+    @Transactional
+    public WorkOrderDetail create(CreateWorkOrderRequest request, AuthenticatedUser caller) {
+        if (request.type() == WorkOrderType.PREVENTIVE && caller.is(Role.TECHNICIAN)) {
+            throw new ForbiddenOperationException("PREVENTIVE_RESERVED",
+                    "Preventive work orders are created by maintenance managers");
+        }
         Equipment equipment = equipments.findById(request.equipmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Equipment", request.equipmentId()));
         Priority priority = request.priority() != null
@@ -104,13 +132,30 @@ public class WorkOrderService {
     }
 
     @Transactional
-    public WorkOrderDetail start(Long id) {
-        return apply(id, wo -> wo.start(clock.instant()));
+    public WorkOrderDetail start(Long id, AuthenticatedUser caller) {
+        return apply(id, wo -> {
+            ensureCanCarryOut(wo, caller);
+            wo.start(clock.instant());
+        });
     }
 
     @Transactional
-    public WorkOrderDetail complete(Long id, CompleteWorkOrderRequest request) {
-        return apply(id, wo -> wo.complete(request.timeSpentMinutes(), request.resolution(), clock.instant()));
+    public WorkOrderDetail complete(Long id, CompleteWorkOrderRequest request, AuthenticatedUser caller) {
+        return apply(id, wo -> {
+            ensureCanCarryOut(wo, caller);
+            wo.complete(request.timeSpentMinutes(), request.resolution(), clock.instant());
+        });
+    }
+
+    /** A technician only carries out the work orders assigned to them; managers may act on any. */
+    private static void ensureCanCarryOut(WorkOrder workOrder, AuthenticatedUser caller) {
+        if (!caller.is(Role.TECHNICIAN)) {
+            return;
+        }
+        AppUser assignee = workOrder.getAssignee();
+        if (assignee == null || !assignee.getId().equals(caller.id())) {
+            throw new ForbiddenOperationException("NOT_ASSIGNEE", "This work order is not assigned to you");
+        }
     }
 
     @Transactional

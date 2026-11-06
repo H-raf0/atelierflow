@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /** Preconditions and side effects of each transition, beyond the transition table itself. */
 class WorkOrderTest {
 
-    private static final AppUser TECHNICIAN = new AppUser("tech", "Tech Nicien", Role.TECHNICIAN);
+    private static final AppUser TECHNICIAN = new AppUser("tech", "Tech Nicien", Role.TECHNICIAN, "{noop}x");
     private static final Instant NOW = Instant.parse("2026-11-02T12:00:00Z");
 
     @Test
@@ -31,7 +31,7 @@ class WorkOrderTest {
     @Test
     void onlyATechnicianCanBeAssigned() {
         WorkOrder workOrder = workOrderIn(WorkOrderStatus.OPEN);
-        AppUser manager = new AppUser("boss", "Res Ponsable", Role.MANAGER);
+        AppUser manager = new AppUser("boss", "Res Ponsable", Role.MANAGER, "{noop}x");
 
         assertThatThrownBy(() -> workOrder.plan(manager, LocalDate.of(2026, 11, 5)))
                 .isInstanceOf(BusinessRuleException.class)

@@ -1,6 +1,7 @@
 package dev.atelierflow.workorder;
 
 import dev.atelierflow.user.UserMapper;
+import dev.atelierflow.workorder.dto.CommentResponse;
 import dev.atelierflow.workorder.dto.WorkOrderDetail;
 import dev.atelierflow.workorder.dto.WorkOrderSummary;
 import java.util.Set;
@@ -26,6 +27,8 @@ public interface WorkOrderMapper {
     @Mapping(target = "equipmentCriticality", source = "equipment.criticality")
     @Mapping(target = "allowedTransitions", source = "status", qualifiedByName = "allowedTransitions")
     WorkOrderDetail toDetail(WorkOrder workOrder);
+
+    CommentResponse toComment(WorkOrderComment comment);
 
     /** Human-friendly number printed on the job sheet, e.g. {@code OT-00042}. */
     @Named("reference")

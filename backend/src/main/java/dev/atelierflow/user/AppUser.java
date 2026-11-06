@@ -23,14 +23,19 @@ public class AppUser extends BaseEntity {
     @Column(nullable = false, length = 20)
     private Role role;
 
+    /** Encoded password ({@code {bcrypt}$2a$10$...}); the clear text is never stored nor logged. */
+    @Column(nullable = false, length = 100)
+    private String passwordHash;
+
     /** Required by JPA. */
     protected AppUser() {
     }
 
-    public AppUser(String username, String fullName, Role role) {
+    public AppUser(String username, String fullName, Role role, String passwordHash) {
         this.username = Objects.requireNonNull(username);
         this.fullName = Objects.requireNonNull(fullName);
         this.role = Objects.requireNonNull(role);
+        this.passwordHash = Objects.requireNonNull(passwordHash);
     }
 
     public boolean hasRole(Role expected) {
@@ -47,5 +52,9 @@ public class AppUser extends BaseEntity {
 
     public Role getRole() {
         return role;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
     }
 }

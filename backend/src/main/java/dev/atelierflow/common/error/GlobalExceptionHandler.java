@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,6 +41,36 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     ProblemDetail handleBusinessRule(BusinessRuleException ex) {
         return problem(HttpStatus.CONFLICT, "Business rule violated", ex.getMessage(), ex.getCode());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    ResponseEntity<ProblemDetail> handleBadCredentials(BadCredentialsException ex) {
+        return unauthorized(problem(HttpStatus.UNAUTHORIZED, "Authentication failed",
+                "Invalid username or password.", "INVALID_CREDENTIALS"));
+    }
+
+    /** Missing, malformed or expired access token (forwarded by the security filter chain). */
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<ProblemDetail> handleAuthentication(AuthenticationException ex) {
+        return unauthorized(problem(HttpStatus.UNAUTHORIZED, "Authentication required",
+                "A valid access token is required.", "UNAUTHENTICATED"));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    ResponseEntity<ProblemDetail> handleUnauthorized(UnauthorizedException ex) {
+        return unauthorized(problem(HttpStatus.UNAUTHORIZED, "Authentication required", ex.getMessage(), ex.getCode()));
+    }
+
+    /** Role check failed ({@code @PreAuthorize} or URL rule). */
+    @ExceptionHandler(AccessDeniedException.class)
+    ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        return problem(HttpStatus.FORBIDDEN, "Access denied",
+                "Your role does not allow this operation.", "ACCESS_DENIED");
+    }
+
+    @ExceptionHandler(ForbiddenOperationException.class)
+    ProblemDetail handleForbiddenOperation(ForbiddenOperationException ex) {
+        return problem(HttpStatus.FORBIDDEN, "Access denied", ex.getMessage(), ex.getCode());
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)
@@ -71,6 +104,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 "The request contains invalid fields.", "VALIDATION_FAILED");
         body.setProperty("violations", violations);
         return handleExceptionInternal(ex, body, headers, status, request);
+    }
+
+    /** RFC 6750: a 401 on a bearer-protected API advertises the expected scheme. */
+    private static ResponseEntity<ProblemDetail> unauthorized(ProblemDetail body) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
+                .body(body);
     }
 
     private static ProblemDetail problem(HttpStatus status, String title, String detail, String code) {

@@ -36,7 +36,7 @@ class WorkOrderStateMachineTest {
 
     private static final Instant REPORTED = Instant.parse("2026-11-02T08:00:00Z");
     private static final Instant LATER = REPORTED.plusSeconds(3600);
-    private static final AppUser TECHNICIAN = new AppUser("tech", "Tech Nicien", Role.TECHNICIAN);
+    private static final AppUser TECHNICIAN = new AppUser("tech", "Tech Nicien", Role.TECHNICIAN, "{noop}x");
 
     static Stream<Arguments> allPairs() {
         return Arrays.stream(WorkOrderStatus.values())
