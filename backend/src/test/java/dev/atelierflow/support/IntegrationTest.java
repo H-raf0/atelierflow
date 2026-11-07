@@ -24,13 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
  * <p>Tables are emptied before each test so tests never depend on each other's data. All subclasses
  * share the same configuration, hence one Spring context and one PostgreSQL container.
  */
-@SpringBootTest(properties = {
-        "spring.jpa.properties.hibernate.generate_statistics=true",
-        "atelierflow.scheduling.enabled=false",
-        // test-only key (Base64 of 32 bytes); real deployments inject JWT_SECRET
-        "atelierflow.security.jwt-secret=dGVzdC1vbmx5LWtleS1mb3ItYXRlbGllcmZsb3ctMDEyMzQ1Njc4OQ==",
-        "atelierflow.security.refresh-cookie-secure=false"
-})
+@SpringBootTest // test settings: src/test/resources/config/application.properties
 @Import({TestcontainersConfiguration.class, DatabaseCleaner.class, Fixtures.class, SqlStatistics.class})
 public abstract class IntegrationTest {
 
