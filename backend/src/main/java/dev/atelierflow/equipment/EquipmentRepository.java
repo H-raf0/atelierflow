@@ -9,6 +9,8 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long>, Jpa
 
     boolean existsByCode(String code);
 
+    List<Equipment> findByStatusOrderById(EquipmentStatus status);
+
     @Query("select distinct e.workshop from Equipment e order by e.workshop")
     List<String> findDistinctWorkshops();
 }

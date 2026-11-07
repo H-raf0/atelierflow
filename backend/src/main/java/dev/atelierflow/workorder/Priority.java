@@ -17,4 +17,9 @@ public enum Priority {
             case CRITICAL -> URGENT;
         };
     }
+
+    /** Preventive work can wait a little, except on the machines the line cannot run without. */
+    public static Priority forPreventiveOn(Criticality criticality) {
+        return criticality == Criticality.CRITICAL ? HIGH : MEDIUM;
+    }
 }

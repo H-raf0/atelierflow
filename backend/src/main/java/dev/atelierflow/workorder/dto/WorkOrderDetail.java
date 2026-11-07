@@ -32,6 +32,7 @@ public record WorkOrderDetail(
         String resolution,
         Instant cancelledAt,
         String cancellationReason,
+        Long maintenancePlanId,
         Set<WorkOrderStatus> allowedTransitions,
         Instant createdAt,
         Instant updatedAt) {

@@ -43,7 +43,9 @@ class SecurityConfig {
     private static final String[] PUBLIC_ENDPOINTS = {
             "/api/auth/login", "/api/auth/refresh", "/api/auth/logout",
             "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-            "/actuator/health/**", "/actuator/info"
+            "/actuator/health/**", "/actuator/info",
+            // the WebSocket handshake is public; STOMP frames are authenticated with the JWT
+            "/ws"
     };
 
     /**

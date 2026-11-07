@@ -1,7 +1,9 @@
 package dev.atelierflow.workorder;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import dev.atelierflow.common.error.ResourceNotFoundException;
 import dev.atelierflow.equipment.Criticality;
 import dev.atelierflow.equipment.Equipment;
 import dev.atelierflow.equipment.EquipmentRepository;
@@ -10,6 +12,7 @@ import dev.atelierflow.support.IntegrationTest;
 import dev.atelierflow.support.SqlStatistics;
 import dev.atelierflow.user.AppUser;
 import dev.atelierflow.user.Role;
+import dev.atelierflow.workorder.dto.WorkOrderDetail;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,6 +32,9 @@ class WorkOrderControllerIntegrationTest extends IntegrationTest {
 
     @Autowired
     private SqlStatistics sql;
+
+    @Autowired
+    private WorkOrderService workOrderService;
 
     private Equipment press;
     private AppUser technician;
@@ -141,6 +147,17 @@ class WorkOrderControllerIntegrationTest extends IntegrationTest {
                     {"reason": "Fausse alerte"}
                     """);
             assertThat(pressStatus()).isEqualTo(EquipmentStatus.OPERATIONAL);
+        }
+
+        @Test
+        void breakdownDetectedByTelemetryOpensAnUrgentCorrectiveWorkOrder() {
+            WorkOrderDetail detail = workOrderService.reportBreakdown(press.getId(), "Surchauffe moteur", "Auto");
+
+            assertThat(detail.type()).isEqualTo(WorkOrderType.CORRECTIVE);
+            assertThat(detail.priority()).isEqualTo(Priority.URGENT);
+            assertThat(pressStatus()).isEqualTo(EquipmentStatus.DOWN);
+            assertThatThrownBy(() -> workOrderService.reportBreakdown(999L, "X", null))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test

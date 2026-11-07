@@ -39,4 +39,6 @@ public interface WorkOrderRepository extends JpaRepository<WorkOrder, Long>, Jpa
 
     boolean existsByEquipmentIdAndTypeAndStatusIn(Long equipmentId, WorkOrderType type,
                                                   Collection<WorkOrderStatus> statuses);
+
+    boolean existsByMaintenancePlanIdAndStatusIn(Long maintenancePlanId, Collection<WorkOrderStatus> statuses);
 }
