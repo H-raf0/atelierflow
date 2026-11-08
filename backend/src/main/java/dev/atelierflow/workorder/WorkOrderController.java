@@ -58,7 +58,7 @@ class WorkOrderController {
 
     @GetMapping
     @Operation(summary = "Search work orders with server-side paging")
-    PageResponse<WorkOrderSummary> search(
+    PageResponse<WorkOrderSummary> searchWorkOrders(
             @ParameterObject WorkOrderFilter filter,
             @ParameterObject @PageableDefault(size = 20, sort = "reportedAt", direction = Sort.Direction.DESC)
             Pageable pageable) {
@@ -67,19 +67,19 @@ class WorkOrderController {
 
     @GetMapping("/board")
     @Operation(summary = "Kanban board: active work orders and those completed in the last 7 days")
-    List<WorkOrderSummary> board() {
+    List<WorkOrderSummary> getBoard() {
         return service.board();
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get one work order")
-    WorkOrderDetail get(@PathVariable Long id) {
+    WorkOrderDetail getWorkOrder(@PathVariable Long id) {
         return service.get(id);
     }
 
     @PostMapping
     @Operation(summary = "Create a work order (a corrective one marks the machine as down; preventive: managers only)")
-    ResponseEntity<WorkOrderDetail> create(@Valid @RequestBody CreateWorkOrderRequest request,
+    ResponseEntity<WorkOrderDetail> createWorkOrder(@Valid @RequestBody CreateWorkOrderRequest request,
                                            @AuthenticationPrincipal AuthenticatedUser caller) {
         WorkOrderDetail created = service.create(request, caller);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -90,33 +90,33 @@ class WorkOrderController {
     @PutMapping("/{id}")
     @ManagerOrAdmin
     @Operation(summary = "Edit title, description and priority of an open work order")
-    WorkOrderDetail update(@PathVariable Long id, @Valid @RequestBody UpdateWorkOrderRequest request) {
+    WorkOrderDetail updateWorkOrder(@PathVariable Long id, @Valid @RequestBody UpdateWorkOrderRequest request) {
         return service.update(id, request);
     }
 
     @PostMapping("/{id}/plan")
     @ManagerOrAdmin
     @Operation(summary = "OPEN → PLANNED: assign a technician and a date")
-    WorkOrderDetail plan(@PathVariable Long id, @Valid @RequestBody PlanWorkOrderRequest request) {
+    WorkOrderDetail planWorkOrder(@PathVariable Long id, @Valid @RequestBody PlanWorkOrderRequest request) {
         return service.plan(id, request);
     }
 
     @PostMapping("/{id}/unplan")
     @ManagerOrAdmin
     @Operation(summary = "PLANNED → OPEN: withdraw the assignment")
-    WorkOrderDetail unplan(@PathVariable Long id) {
+    WorkOrderDetail unplanWorkOrder(@PathVariable Long id) {
         return service.unplan(id);
     }
 
     @PostMapping("/{id}/start")
     @Operation(summary = "PLANNED → IN_PROGRESS (a technician only starts their own work orders)")
-    WorkOrderDetail start(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser caller) {
+    WorkOrderDetail startWorkOrder(@PathVariable Long id, @AuthenticationPrincipal AuthenticatedUser caller) {
         return service.start(id, caller);
     }
 
     @PostMapping("/{id}/complete")
     @Operation(summary = "IN_PROGRESS → DONE: record the time spent and the resolution")
-    WorkOrderDetail complete(@PathVariable Long id, @Valid @RequestBody CompleteWorkOrderRequest request,
+    WorkOrderDetail completeWorkOrder(@PathVariable Long id, @Valid @RequestBody CompleteWorkOrderRequest request,
                              @AuthenticationPrincipal AuthenticatedUser caller) {
         return service.complete(id, request, caller);
     }
@@ -124,19 +124,19 @@ class WorkOrderController {
     @PostMapping("/{id}/cancel")
     @ManagerOrAdmin
     @Operation(summary = "OPEN or PLANNED → CANCELLED, with a reason")
-    WorkOrderDetail cancel(@PathVariable Long id, @Valid @RequestBody CancelWorkOrderRequest request) {
+    WorkOrderDetail cancelWorkOrder(@PathVariable Long id, @Valid @RequestBody CancelWorkOrderRequest request) {
         return service.cancel(id, request);
     }
 
     @GetMapping("/{id}/history")
     @Operation(summary = "Audit trail: who changed what and when (Hibernate Envers)")
-    List<HistoryEntry> history(@PathVariable Long id) {
+    List<HistoryEntry> getWorkOrderHistory(@PathVariable Long id) {
         return historyService.history(id);
     }
 
     @GetMapping("/{id}/comments")
     @Operation(summary = "Comments of a work order, oldest first")
-    List<CommentResponse> comments(@PathVariable Long id) {
+    List<CommentResponse> listComments(@PathVariable Long id) {
         return service.comments(id);
     }
 

@@ -22,7 +22,7 @@ class UserController {
 
     @GetMapping
     @Operation(summary = "List users, optionally filtered by role")
-    List<UserSummary> list(@RequestParam(required = false) Role role) {
+    List<UserSummary> listUsers(@RequestParam(required = false) Role role) {
         return service.list(role);
     }
 }

@@ -29,14 +29,14 @@ class KpiController {
 
     @GetMapping("/summary")
     @Operation(summary = "Fleet-wide indicators over a period")
-    KpiSummary summary(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-                       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+    KpiSummary getKpiSummary(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return service.summary(from, to);
     }
 
     @GetMapping("/equipment")
     @Operation(summary = "Indicators per machine, worst downtime first")
-    List<EquipmentKpi> byEquipment(
+    List<EquipmentKpi> getEquipmentKpis(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return service.byEquipment(from, to);
@@ -44,7 +44,7 @@ class KpiController {
 
     @GetMapping("/monthly")
     @Operation(summary = "Corrective and preventive activity per month")
-    List<MonthlyKpi> monthly(@RequestParam(defaultValue = "6") @Min(1) @Max(24) int months) {
+    List<MonthlyKpi> getMonthlyKpis(@RequestParam(defaultValue = "6") @Min(1) @Max(24) int months) {
         return service.monthly(months);
     }
 }

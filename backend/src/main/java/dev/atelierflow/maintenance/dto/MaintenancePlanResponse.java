@@ -1,6 +1,7 @@
 package dev.atelierflow.maintenance.dto;
 
 import dev.atelierflow.maintenance.TriggerType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 
 /**
@@ -14,14 +15,14 @@ public record MaintenancePlanResponse(
         String equipmentCode,
         String equipmentName,
         String title,
-        String instructions,
+        @Schema(nullable = true) String instructions,
         TriggerType trigger,
-        Integer intervalDays,
-        Integer intervalHours,
+        @Schema(nullable = true) Integer intervalDays,
+        @Schema(nullable = true) Integer intervalHours,
         LocalDate lastServiceDate,
         double lastServiceHours,
-        LocalDate nextDueDate,
-        Double remainingHours,
+        @Schema(nullable = true) LocalDate nextDueDate,
+        @Schema(nullable = true) Double remainingHours,
         boolean due,
         boolean active) {
 }

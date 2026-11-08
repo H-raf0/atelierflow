@@ -1,5 +1,6 @@
 package dev.atelierflow.workorder.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
 
@@ -12,6 +13,6 @@ import java.util.List;
 public record HistoryEntry(long revision, Instant timestamp, String username, String action, List<FieldChange> changes) {
 
     /** Old and new value of one field, rendered as text (null when empty). */
-    public record FieldChange(String field, String from, String to) {
+    public record FieldChange(String field, @Schema(nullable = true) String from, @Schema(nullable = true) String to) {
     }
 }

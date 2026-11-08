@@ -1,6 +1,7 @@
 package dev.atelierflow.kpi.dto;
 
 import dev.atelierflow.workorder.Priority;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.util.Map;
 
@@ -18,10 +19,10 @@ public record KpiSummary(
         long failures,
         long repairs,
         double downtimeHours,
-        Double mtbfHours,
-        Double mttrHours,
+        @Schema(nullable = true) Double mtbfHours,
+        @Schema(nullable = true) Double mttrHours,
         double availability,
-        Double preventiveShare,
+        @Schema(nullable = true) Double preventiveShare,
         Map<Priority, Long> backlogByPriority,
         long backlogTotal) {
 }

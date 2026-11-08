@@ -41,7 +41,7 @@ class EquipmentController {
 
     @GetMapping
     @Operation(summary = "Search the fleet (free text, workshop, criticality, status) with server-side paging")
-    PageResponse<EquipmentResponse> search(
+    PageResponse<EquipmentResponse> searchEquipment(
             @ParameterObject EquipmentFilter filter,
             @ParameterObject @PageableDefault(size = 20, sort = "code") Pageable pageable) {
         return service.search(filter, pageable);
@@ -49,20 +49,20 @@ class EquipmentController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Get one machine")
-    EquipmentResponse get(@PathVariable Long id) {
+    EquipmentResponse getEquipment(@PathVariable Long id) {
         return service.get(id);
     }
 
     @GetMapping("/workshops")
     @Operation(summary = "List the distinct workshops, for filter drop-downs")
-    List<String> workshops() {
+    List<String> listWorkshops() {
         return service.workshops();
     }
 
     @PostMapping
     @ManagerOrAdmin
     @Operation(summary = "Register a machine")
-    ResponseEntity<EquipmentResponse> create(@Valid @RequestBody CreateEquipmentRequest request) {
+    ResponseEntity<EquipmentResponse> createEquipment(@Valid @RequestBody CreateEquipmentRequest request) {
         EquipmentResponse created = service.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(created.id()).toUri();
@@ -72,7 +72,7 @@ class EquipmentController {
     @PutMapping("/{id}")
     @ManagerOrAdmin
     @Operation(summary = "Update the editable attributes of a machine")
-    EquipmentResponse update(@PathVariable Long id, @Valid @RequestBody UpdateEquipmentRequest request) {
+    EquipmentResponse updateEquipment(@PathVariable Long id, @Valid @RequestBody UpdateEquipmentRequest request) {
         return service.update(id, request);
     }
 
@@ -80,7 +80,7 @@ class EquipmentController {
     @AdminOnly
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove a machine (refused with 409 once it has work orders)")
-    void delete(@PathVariable Long id) {
+    void deleteEquipment(@PathVariable Long id) {
         service.delete(id);
     }
 }

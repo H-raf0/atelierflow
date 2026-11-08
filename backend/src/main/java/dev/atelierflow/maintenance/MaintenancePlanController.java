@@ -37,20 +37,20 @@ class MaintenancePlanController {
 
     @GetMapping
     @Operation(summary = "List plans, optionally of one machine")
-    List<MaintenancePlanResponse> list(@RequestParam(required = false) Long equipmentId) {
+    List<MaintenancePlanResponse> listMaintenancePlans(@RequestParam(required = false) Long equipmentId) {
         return service.list(equipmentId);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get one plan")
-    MaintenancePlanResponse get(@PathVariable Long id) {
+    MaintenancePlanResponse getMaintenancePlan(@PathVariable Long id) {
         return service.get(id);
     }
 
     @PostMapping
     @ManagerOrAdmin
     @Operation(summary = "Create a plan")
-    ResponseEntity<MaintenancePlanResponse> create(@Valid @RequestBody CreateMaintenancePlanRequest request) {
+    ResponseEntity<MaintenancePlanResponse> createMaintenancePlan(@Valid @RequestBody CreateMaintenancePlanRequest request) {
         MaintenancePlanResponse created = service.create(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}").buildAndExpand(created.id()).toUri();
@@ -60,7 +60,7 @@ class MaintenancePlanController {
     @PutMapping("/{id}")
     @ManagerOrAdmin
     @Operation(summary = "Update title, instructions, interval or activation")
-    MaintenancePlanResponse update(@PathVariable Long id, @Valid @RequestBody UpdateMaintenancePlanRequest request) {
+    MaintenancePlanResponse updateMaintenancePlan(@PathVariable Long id, @Valid @RequestBody UpdateMaintenancePlanRequest request) {
         return service.update(id, request);
     }
 
@@ -68,14 +68,14 @@ class MaintenancePlanController {
     @ManagerOrAdmin
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete a plan (generated work orders are kept)")
-    void delete(@PathVariable Long id) {
+    void deleteMaintenancePlan(@PathVariable Long id) {
         service.delete(id);
     }
 
     @PostMapping("/generate")
     @ManagerOrAdmin
     @Operation(summary = "Run the preventive generation now instead of waiting for the scheduler")
-    GenerationResult generate() {
+    GenerationResult generatePreventiveWorkOrders() {
         return new GenerationResult(service.generateDueWorkOrders());
     }
 }

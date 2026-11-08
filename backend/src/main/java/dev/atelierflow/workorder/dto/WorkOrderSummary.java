@@ -4,6 +4,7 @@ import dev.atelierflow.user.dto.UserSummary;
 import dev.atelierflow.workorder.Priority;
 import dev.atelierflow.workorder.WorkOrderStatus;
 import dev.atelierflow.workorder.WorkOrderType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Set;
@@ -23,8 +24,8 @@ public record WorkOrderSummary(
         Long equipmentId,
         String equipmentCode,
         String equipmentName,
-        UserSummary assignee,
+        @Schema(nullable = true) UserSummary assignee,
         Instant reportedAt,
-        LocalDate scheduledFor,
+        @Schema(nullable = true) LocalDate scheduledFor,
         Set<WorkOrderStatus> allowedTransitions) {
 }
