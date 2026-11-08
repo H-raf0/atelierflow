@@ -8,6 +8,7 @@ import dev.atelierflow.workorder.dto.CancelWorkOrderRequest;
 import dev.atelierflow.workorder.dto.CommentResponse;
 import dev.atelierflow.workorder.dto.CompleteWorkOrderRequest;
 import dev.atelierflow.workorder.dto.CreateWorkOrderRequest;
+import dev.atelierflow.workorder.dto.HistoryEntry;
 import dev.atelierflow.workorder.dto.PlanWorkOrderRequest;
 import dev.atelierflow.workorder.dto.UpdateWorkOrderRequest;
 import dev.atelierflow.workorder.dto.WorkOrderDetail;
@@ -48,9 +49,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 class WorkOrderController {
 
     private final WorkOrderService service;
+    private final WorkOrderHistoryService historyService;
 
-    WorkOrderController(WorkOrderService service) {
+    WorkOrderController(WorkOrderService service, WorkOrderHistoryService historyService) {
         this.service = service;
+        this.historyService = historyService;
     }
 
     @GetMapping
@@ -123,6 +126,12 @@ class WorkOrderController {
     @Operation(summary = "OPEN or PLANNED → CANCELLED, with a reason")
     WorkOrderDetail cancel(@PathVariable Long id, @Valid @RequestBody CancelWorkOrderRequest request) {
         return service.cancel(id, request);
+    }
+
+    @GetMapping("/{id}/history")
+    @Operation(summary = "Audit trail: who changed what and when (Hibernate Envers)")
+    List<HistoryEntry> history(@PathVariable Long id) {
+        return historyService.history(id);
     }
 
     @GetMapping("/{id}/comments")

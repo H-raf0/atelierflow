@@ -16,6 +16,8 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Objects;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 /**
  * A maintenance job on one machine (aggregate root).
@@ -27,10 +29,12 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "work_order")
+@Audited // every committed change is kept in work_order_aud (Hibernate Envers), see WorkOrderHistoryService
 public class WorkOrder extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "equipment_id", nullable = false, updatable = false)
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Equipment equipment;
 
     @Enumerated(EnumType.STRING)
@@ -52,6 +56,7 @@ public class WorkOrder extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assignee_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private AppUser assignee;
 
     /** When the need was reported (breakdown time for a corrective work order). */
