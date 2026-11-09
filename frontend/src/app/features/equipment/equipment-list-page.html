@@ -1,0 +1,104 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Parc machines</h1>
+    <span class="spacer"></span>
+    @if (auth.canManage()) {
+      <button mat-flat-button (click)="openForm()" data-testid="new-equipment">
+        <mat-icon>add</mat-icon> Nouvelle machine
+      </button>
+    }
+  </header>
+
+  <form class="filters" [formGroup]="filters">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Rechercher (code, nom)</mat-label>
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput formControlName="q" data-testid="equipment-search">
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Atelier</mat-label>
+      <mat-select formControlName="workshop">
+        <mat-option value="">Tous</mat-option>
+        @for (workshop of workshops.value() ?? []; track workshop) {
+          <mat-option [value]="workshop">{{ workshop }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Criticité</mat-label>
+      <mat-select formControlName="criticality">
+        <mat-option value="">Toutes</mat-option>
+        @for (criticality of criticalities; track criticality) {
+          <mat-option [value]="criticality">{{ criticalityLabels[criticality] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Statut</mat-label>
+      <mat-select formControlName="status">
+        <mat-option value="">Tous</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ statusLabels[status] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </form>
+
+  <section class="table-card">
+    @if (equipment.isLoading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    <table mat-table [dataSource]="equipment.value()?.content ?? []" matSort
+           [matSortActive]="sort().active" [matSortDirection]="sort().direction" (matSortChange)="onSort($event)">
+      <ng-container matColumnDef="code">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Code</th>
+        <td mat-cell *matCellDef="let e" class="code">{{ e.code }}</td>
+      </ng-container>
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Désignation</th>
+        <td mat-cell *matCellDef="let e">{{ e.name }}</td>
+      </ng-container>
+      <ng-container matColumnDef="workshop">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Atelier</th>
+        <td mat-cell *matCellDef="let e">{{ e.workshop }}</td>
+      </ng-container>
+      <ng-container matColumnDef="criticality">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Criticité</th>
+        <td mat-cell *matCellDef="let e">
+          <span class="badge" [class]="'crit-' + e.criticality">{{ criticalityLabel(e) }}</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut</th>
+        <td mat-cell *matCellDef="let e">
+          <span class="badge" [class]="'eq-' + e.status">{{ statusLabel(e) }}</span>
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="operatingHours">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="num">Heures</th>
+        <td mat-cell *matCellDef="let e" class="num">{{ e.operatingHours | number: '1.0-0' }} h</td>
+      </ng-container>
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let e" class="actions">
+          @if (auth.canManage()) {
+            <button mat-icon-button matTooltip="Modifier" (click)="openForm(e)"><mat-icon>edit</mat-icon></button>
+          }
+          @if (auth.isAdmin()) {
+            <button mat-icon-button matTooltip="Supprimer" (click)="remove(e)"><mat-icon>delete</mat-icon></button>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns" data-testid="equipment-row"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell empty" [attr.colspan]="columns.length">
+          @if (equipment.error()) { Impossible de charger le parc. } @else { Aucune machine ne correspond. }
+        </td>
+      </tr>
+    </table>
+    <mat-paginator [length]="equipment.value()?.totalElements ?? 0" [pageIndex]="page().index"
+                   [pageSize]="page().size" [pageSizeOptions]="[10, 20, 50]" (page)="onPage($event)" />
+  </section>
+</div>

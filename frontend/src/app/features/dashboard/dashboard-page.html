@@ -1,0 +1,67 @@
+<div class="page">
+  <header class="page-header">
+    <h1>Tableau de bord fiabilité</h1>
+    <span class="spacer"></span>
+    <mat-button-toggle-group [value]="periodDays()" (change)="periodDays.set($event.value)" aria-label="Période">
+      @for (days of periods; track days) {
+        <mat-button-toggle [value]="days">{{ days }} jours</mat-button-toggle>
+      }
+    </mat-button-toggle-group>
+  </header>
+
+  @if (summary.isLoading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (summary.value(); as kpi) {
+    <section class="kpis">
+      <mat-card appearance="outlined" class="kpi" data-testid="kpi-availability">
+        <span class="label">Disponibilité</span>
+        <span class="value">{{ kpi.availability | percent: '1.1-1' }}</span>
+        <span class="hint muted">Part du temps où les machines pouvaient produire</span>
+      </mat-card>
+      <mat-card appearance="outlined" class="kpi" data-testid="kpi-mtbf">
+        <span class="label" matTooltip="Mean Time Between Failures : temps de bon fonctionnement / nombre de pannes">MTBF</span>
+        <span class="value">{{ kpi.mtbfHours === null ? '—' : (kpi.mtbfHours | number: '1.0-0') + ' h' }}</span>
+        <span class="hint muted">Temps moyen entre deux pannes ({{ kpi.failures }} pannes)</span>
+      </mat-card>
+      <mat-card appearance="outlined" class="kpi" data-testid="kpi-mttr">
+        <span class="label" matTooltip="Mean Time To Repair : durée moyenne signalement → remise en service">MTTR</span>
+        <span class="value">{{ kpi.mttrHours === null ? '—' : (kpi.mttrHours | number: '1.1-1') + ' h' }}</span>
+        <span class="hint muted">Temps moyen de remise en service ({{ kpi.repairs }} réparations)</span>
+      </mat-card>
+      <mat-card appearance="outlined" class="kpi" data-testid="kpi-backlog">
+        <span class="label">Backlog</span>
+        <span class="value">{{ kpi.backlogTotal }}</span>
+        <span class="hint muted">
+          OT à traiter · préventif {{ kpi.preventiveShare === null ? '—' : (kpi.preventiveShare | percent) }} des OT clôturés
+        </span>
+      </mat-card>
+    </section>
+  }
+
+  <section class="charts">
+    <mat-card appearance="outlined" class="chart">
+      <h2>Activité des 6 derniers mois</h2>
+      @if (monthlyChart(); as data) {
+        <div class="canvas"><canvas baseChart type="bar" [data]="data" [options]="stackedOptions"></canvas></div>
+      }
+    </mat-card>
+    <mat-card appearance="outlined" class="chart">
+      <h2>Backlog par priorité</h2>
+      @if (backlogChart(); as data) {
+        <div class="canvas"><canvas baseChart type="bar" [data]="data" [options]="barOptions"></canvas></div>
+      }
+    </mat-card>
+    <mat-card appearance="outlined" class="chart wide">
+      <h2>Machines les plus arrêtées sur la période</h2>
+      @if (downtimeChart(); as data) {
+        @if (data.labels?.length) {
+          <div class="canvas"><canvas baseChart type="bar" [data]="data" [options]="horizontalOptions"></canvas></div>
+        } @else {
+          <p class="muted">Aucun arrêt sur la période.</p>
+        }
+      }
+    </mat-card>
+  </section>
+</div>

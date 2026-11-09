@@ -1,0 +1,46 @@
+<main class="login">
+  <mat-card appearance="outlined" class="card">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    <mat-card-header>
+      <mat-icon mat-card-avatar class="avatar">factory</mat-icon>
+      <mat-card-title>AtelierFlow</mat-card-title>
+      <mat-card-subtitle>Gestion de la maintenance de l'atelier</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (expired()) {
+        <p class="info">Votre session a expiré, veuillez vous reconnecter.</p>
+      }
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form">
+        <mat-form-field appearance="outline">
+          <mat-label>Identifiant</mat-label>
+          <input matInput formControlName="username" autocomplete="username" data-testid="username">
+          @if (form.controls.username.hasError('required')) {
+            <mat-error>L'identifiant est obligatoire</mat-error>
+          }
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Mot de passe</mat-label>
+          <input matInput type="password" formControlName="password" autocomplete="current-password"
+                 data-testid="password">
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>Le mot de passe est obligatoire</mat-error>
+          }
+        </mat-form-field>
+        @if (error(); as message) {
+          <p class="error" role="alert">{{ message }}</p>
+        }
+        <button mat-flat-button type="submit" [disabled]="loading()" data-testid="login">Se connecter</button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-footer class="demo">
+      <span class="muted">Comptes de démonstration :</span>
+      @for (account of demoAccounts; track account.username) {
+        <button mat-stroked-button type="button" (click)="fill(account)">{{ account.label }}</button>
+      }
+    </mat-card-footer>
+  </mat-card>
+</main>

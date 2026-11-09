@@ -1,0 +1,59 @@
+<div class="page board-page">
+  <header class="page-header">
+    <h1>Ordres de travail</h1>
+    <span class="spacer"></span>
+    <button mat-icon-button matTooltip="Recharger" (click)="reload()"><mat-icon>refresh</mat-icon></button>
+    <button mat-flat-button (click)="newWorkOrder()" data-testid="new-work-order">
+      <mat-icon>add</mat-icon> Nouvel OT
+    </button>
+  </header>
+  <p class="muted hint">
+    Glissez une carte vers une autre colonne pour la faire avancer.
+    @if (!auth.canManage()) { Vous pouvez démarrer et terminer les OT qui vous sont assignés. }
+  </p>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+  @if (error()) {
+    <p class="error">Impossible de charger le tableau. <button mat-button (click)="reload()">Réessayer</button></p>
+  }
+
+  <div class="board" cdkDropListGroup>
+    @for (column of columns; track column) {
+      <section class="column" [attr.data-testid]="'column-' + column">
+        <header class="column-header">
+          <span class="badge" [class]="'st-' + column">{{ statusLabels[column] }}</span>
+          <span class="count">{{ byColumn()[column].length }}</span>
+        </header>
+        <div class="cards" cdkDropList [cdkDropListData]="column" [cdkDropListEnterPredicate]="canDrop"
+             (cdkDropListDropped)="onDrop($event)">
+          @for (card of byColumn()[column]; track card.id) {
+            <article class="card" cdkDrag [cdkDragData]="card" [attr.data-testid]="'card-' + card.reference">
+              <div class="card-top">
+                <a class="reference" [routerLink]="['/work-orders', card.id]">{{ card.reference }}</a>
+                <span class="badge" [class]="'prio-' + card.priority">{{ priorityLabels[card.priority] }}</span>
+              </div>
+              <div class="title">{{ card.title }}</div>
+              <div class="meta">
+                <mat-icon inline>precision_manufacturing</mat-icon>
+                <span>{{ card.equipmentCode }}</span>
+                <span class="type">{{ typeLabels[card.type] }}</span>
+              </div>
+              <div class="meta muted">
+                @if (card.assignee; as assignee) {
+                  <mat-icon inline>person</mat-icon> {{ assignee.fullName }}
+                  @if (card.scheduledFor) { · {{ card.scheduledFor | date: 'd MMM' }} }
+                } @else {
+                  Signalé le {{ card.reportedAt | date: 'd MMM HH:mm' }}
+                }
+              </div>
+            </article>
+          } @empty {
+            <p class="empty muted">Aucun OT</p>
+          }
+        </div>
+      </section>
+    }
+  </div>
+</div>

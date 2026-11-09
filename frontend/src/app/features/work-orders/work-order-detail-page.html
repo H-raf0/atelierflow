@@ -1,0 +1,115 @@
+<div class="page">
+  <a mat-button routerLink="/board" class="back"><mat-icon>arrow_back</mat-icon> Tableau des OT</a>
+
+  @if (workOrder.isLoading() && !workOrder.hasValue()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+  @if (workOrder.error()) {
+    <p class="error">Ordre de travail introuvable.</p>
+  }
+
+  @if (workOrder.value(); as wo) {
+    <header class="page-header">
+      <h1><span class="reference">{{ wo.reference }}</span> {{ wo.title }}</h1>
+      <span class="spacer"></span>
+      @for (action of availableActions(); track action.move) {
+        <button mat-stroked-button (click)="run(action)" [attr.data-testid]="'action-' + action.move">
+          <mat-icon>{{ action.icon }}</mat-icon> {{ action.label }}
+        </button>
+      }
+    </header>
+
+    <div class="layout">
+      <mat-card appearance="outlined" class="details">
+        <mat-card-content>
+          <div class="badges">
+            <span class="badge" [class]="'st-' + wo.status" data-testid="wo-status">{{ labels.status[wo.status] }}</span>
+            <span class="badge" [class]="'prio-' + wo.priority">Priorité {{ labels.priority[wo.priority] | lowercase }}</span>
+            <span class="badge">{{ labels.type[wo.type] }}</span>
+          </div>
+          <dl>
+            <dt>Machine</dt>
+            <dd>{{ wo.equipmentCode }} — {{ wo.equipmentName }}
+              <span class="muted">({{ wo.equipmentWorkshop }}, criticité {{ labels.criticality[wo.equipmentCriticality] | lowercase }})</span>
+            </dd>
+            <dt>Signalé le</dt>
+            <dd>{{ wo.reportedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            <dt>Technicien</dt>
+            <dd>{{ wo.assignee?.fullName ?? 'Non assigné' }}</dd>
+            @if (wo.scheduledFor) {
+              <dt>Date prévue</dt>
+              <dd>{{ wo.scheduledFor | date: 'dd/MM/yyyy' }}</dd>
+            }
+            @if (wo.startedAt) {
+              <dt>Démarré le</dt>
+              <dd>{{ wo.startedAt | date: 'dd/MM/yyyy HH:mm' }}</dd>
+            }
+            @if (wo.completedAt) {
+              <dt>Terminé le</dt>
+              <dd>{{ wo.completedAt | date: 'dd/MM/yyyy HH:mm' }} — {{ wo.timeSpentMinutes }} min passées</dd>
+              <dt>Travaux réalisés</dt>
+              <dd>{{ wo.resolution }}</dd>
+            }
+            @if (wo.cancellationReason) {
+              <dt>Motif d'annulation</dt>
+              <dd>{{ wo.cancellationReason }}</dd>
+            }
+            @if (wo.description) {
+              <dt>Description</dt>
+              <dd class="pre">{{ wo.description }}</dd>
+            }
+          </dl>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card appearance="outlined" class="side">
+        <mat-tab-group>
+          <mat-tab label="Historique">
+            <ol class="timeline" data-testid="history">
+              @for (entry of history.value() ?? []; track entry.revision) {
+                <li>
+                  <div class="when">
+                    {{ entry.timestamp | date: 'dd/MM HH:mm' }} · <strong>{{ entry.username }}</strong>
+                    · {{ entry.action === 'CREATED' ? 'création' : 'modification' }}
+                  </div>
+                  <ul>
+                    @for (change of entry.changes; track change.field) {
+                      <li>
+                        {{ labels.field[change.field] ?? change.field }} :
+                        @if (entry.action === 'UPDATED') {
+                          <span class="muted">{{ historyValue(change.field, change.from) }}</span> →
+                        }
+                        {{ historyValue(change.field, change.to) }}
+                      </li>
+                    }
+                  </ul>
+                </li>
+              } @empty {
+                <li class="muted">Aucun historique.</li>
+              }
+            </ol>
+          </mat-tab>
+          <mat-tab label="Commentaires ({{ comments.value()?.length ?? 0 }})">
+            <div class="comments">
+              @for (comment of comments.value() ?? []; track comment.id) {
+                <div class="comment">
+                  <div class="when"><strong>{{ comment.author.fullName }}</strong> · {{ comment.createdAt | date: 'dd/MM HH:mm' }}</div>
+                  <div class="pre">{{ comment.body }}</div>
+                </div>
+              } @empty {
+                <p class="muted">Aucun commentaire.</p>
+              }
+              <form [formGroup]="commentForm" (ngSubmit)="postComment()" class="comment-form">
+                <mat-form-field appearance="outline" subscriptSizing="dynamic">
+                  <mat-label>Ajouter un commentaire</mat-label>
+                  <textarea matInput rows="2" formControlName="body"></textarea>
+                </mat-form-field>
+                <button mat-flat-button type="submit" [disabled]="commentForm.invalid || posting()">Publier</button>
+              </form>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+      </mat-card>
+    </div>
+  }
+</div>

@@ -1,0 +1,48 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Modifier ' + data.equipment?.code : 'Nouvelle machine' }}</h2>
+<form [formGroup]="form" (ngSubmit)="save()">
+  <mat-dialog-content class="dialog-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Code</mat-label>
+      <input matInput formControlName="code" placeholder="PRS-001">
+      <mat-hint>3 à 20 majuscules, chiffres ou tirets</mat-hint>
+      @if (form.controls.code.hasError('pattern')) {
+        <mat-error>Format invalide (ex. PRS-001)</mat-error>
+      }
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Désignation</mat-label>
+      <input matInput formControlName="name">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Atelier</mat-label>
+      <input matInput formControlName="workshop" list="workshops">
+      <datalist id="workshops">
+        @for (workshop of data.workshops; track workshop) {
+          <option [value]="workshop"></option>
+        }
+      </datalist>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Criticité</mat-label>
+      <mat-select formControlName="criticality">
+        @for (criticality of criticalities; track criticality) {
+          <mat-option [value]="criticality">{{ criticalityLabels[criticality] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Heures de fonctionnement</mat-label>
+      <input matInput type="number" min="0" formControlName="operatingHours">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Mise en service</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="commissionedOn">
+      <mat-datepicker-toggle matIconSuffix [for]="picker" />
+      <mat-datepicker #picker />
+    </mat-form-field>
+  </mat-dialog-content>
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" mat-dialog-close>Annuler</button>
+    <button mat-flat-button type="submit" [disabled]="saving()">Enregistrer</button>
+  </mat-dialog-actions>
+</form>

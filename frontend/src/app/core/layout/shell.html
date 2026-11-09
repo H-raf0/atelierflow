@@ -1,0 +1,40 @@
+<mat-toolbar class="topbar">
+  <mat-icon class="logo">factory</mat-icon>
+  <span class="brand">AtelierFlow</span>
+  <span class="spacer"></span>
+
+  <span class="live" [class.on]="realtime.connected()"
+        [matTooltip]="realtime.connected() ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté, reconnexion…'">
+    <span class="dot"></span>{{ realtime.connected() ? 'Temps réel' : 'Hors ligne' }}
+  </span>
+
+  @if (auth.user(); as user) {
+    <button mat-button [matMenuTriggerFor]="userMenu" data-testid="user-menu">
+      <mat-icon>account_circle</mat-icon>
+      {{ user.fullName }}
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <div class="menu-role muted">{{ roleLabels[user.role] }}</div>
+      <button mat-menu-item (click)="auth.logout()" data-testid="logout">
+        <mat-icon>logout</mat-icon>
+        Se déconnecter
+      </button>
+    </mat-menu>
+  }
+</mat-toolbar>
+
+<mat-sidenav-container class="container">
+  <mat-sidenav mode="side" opened class="sidenav">
+    <mat-nav-list>
+      @for (link of links; track link.path) {
+        <a mat-list-item [routerLink]="link.path" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive">
+          <mat-icon matListItemIcon>{{ link.icon }}</mat-icon>
+          <span matListItemTitle>{{ link.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+  <mat-sidenav-content>
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>
