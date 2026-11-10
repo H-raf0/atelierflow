@@ -1,0 +1,43 @@
+# One command demo: `docker compose up --build`, then open http://localhost:8080
+# The values below are demo values. For any other use, set POSTGRES_PASSWORD and JWT_SECRET
+# (see README) instead of relying on the demo defaults.
+name: atelierflow
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: atelierflow
+      POSTGRES_USER: atelierflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-atelierflow-demo}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atelierflow -d atelierflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      DB_URL: jdbc:postgresql://postgres:5432/atelierflow
+      DB_USER: atelierflow
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-atelierflow-demo}
+      # without JWT_SECRET the demo profile uses its own demo-only key
+      JWT_SECRET: ${JWT_SECRET:-ZGVtby1vbmx5LXNpZ25pbmcta2V5LW5ldmVyLXVzZS1pbi1wcm9kdWN0aW9u}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
