@@ -1,0 +1,15 @@
+# Demo profile: realistic data set, live telemetry, frequent preventive checks.
+# The values below are for a local demonstration only — never use them in production.
+atelierflow:
+  security:
+    # Demo-only key, overridable with JWT_SECRET. A real deployment must inject its own secret.
+    jwt-secret: ${JWT_SECRET:ZGVtby1vbmx5LXNpZ25pbmcta2V5LW5ldmVyLXVzZS1pbi1wcm9kdWN0aW9u}
+    # the demo runs over plain HTTP on localhost
+    refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:false}
+  telemetry:
+    enabled: true
+    interval: 20s
+    hours-per-tick: 0.5
+    failure-probability: 0.002
+  maintenance:
+    preventive-cron: "0 */10 * * * *"
