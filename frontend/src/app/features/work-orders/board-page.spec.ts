@@ -38,8 +38,9 @@ describe('BoardPage', () => {
     onDrop(event: CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>): Promise<void>;
     canDrop(drag: CdkDrag<WorkOrderSummary>, drop: CdkDropList<BoardColumn>): boolean;
   };
-  const drop = (card: WorkOrderSummary, target: BoardColumn) =>
-    ({ item: { data: card }, container: { data: target } }) as CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>;
+  const drop = (card: WorkOrderSummary, target: BoardColumn, isPointerOverContainer = true) =>
+    ({ item: { data: card }, container: { data: target }, isPointerOverContainer }) as
+      CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>;
 
   it('shows each card in the column of its status', () => {
     expect(column('OPEN').textContent).toContain('OT-00001');
@@ -79,6 +80,12 @@ describe('BoardPage', () => {
 
     expect(actions.run).toHaveBeenCalledWith('plan', expect.objectContaining({ id: 1 }));
     expect(column('PLANNED').textContent).toContain('OT-00001');
+  });
+
+  it('ignores a release outside the column the card was last allowed into', async () => {
+    await page().onDrop(drop(workOrderSummary({ id: 1 }), 'PLANNED', false));
+
+    expect(actions.run).not.toHaveBeenCalled();
   });
 
   it('leaves the card in place when the action is dismissed or refused', async () => {

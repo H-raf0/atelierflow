@@ -85,7 +85,9 @@
                   </ul>
                 </li>
               } @empty {
-                <li class="muted">Aucun historique.</li>
+                @if (!history.isLoading()) {
+                  <li class="muted">Aucun historique.</li>
+                }
               }
             </ol>
           </mat-tab>

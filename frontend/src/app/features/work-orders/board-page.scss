@@ -15,7 +15,8 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(240px, 1fr));
   gap: 16px;
-  align-items: start;
+  // columns share the board height, so the whole column is a drop zone, however long the others are
+  align-items: stretch;
   overflow-x: auto;
 }
 
@@ -24,6 +25,8 @@
   border-radius: 12px;
   padding: 12px;
   min-height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
 .column-header {
@@ -39,6 +42,7 @@
 }
 
 .cards {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;

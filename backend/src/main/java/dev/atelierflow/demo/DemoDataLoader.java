@@ -181,7 +181,8 @@ class DemoDataLoader implements ApplicationRunner {
         List<Timeline> timelines = new ArrayList<>();
         for (int i = 0; i < failures; i++) {
             String[] failure = FAILURES.get(random.nextInt(FAILURES.size()));
-            Instant reported = now.minus(HISTORY).plus(Duration.ofMinutes(random.nextLong(HISTORY.toMinutes() - 3 * 24 * 60)));
+            // closed breakdowns: reported at least 2 days ago, so that their repair (≤ ~33 h) is over
+            Instant reported = now.minus(HISTORY).plus(Duration.ofMinutes(random.nextLong(HISTORY.toMinutes() - 2 * 24 * 60)));
             String reporter = random.nextInt(3) == 0 ? SYSTEM : pickTechnician();
             Timeline wo = new Timeline(equipmentId, "CORRECTIVE", priority.name(), failure[0],
                     "Constaté par l'opérateur en production.", reported, reporter);
@@ -193,7 +194,7 @@ class DemoDataLoader implements ApplicationRunner {
             timelines.add(wo);
         }
         // a few breakdowns still being handled today make the board and the KPIs alive
-        if (spec.criticality() != Criticality.LOW && random.nextInt(4) == 0) {
+        if (spec.criticality() != Criticality.LOW && random.nextInt(2) == 0) {
             String[] failure = FAILURES.get(random.nextInt(FAILURES.size()));
             Timeline wo = new Timeline(equipmentId, "CORRECTIVE", priority.name(), failure[0],
                     "Machine arrêtée, production reportée sur une autre ligne.", now.minus(minutes(4 * 60, 30 * 60)), pickTechnician());

@@ -62,7 +62,9 @@ export class BoardPage {
 
   protected async onDrop(event: CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>): Promise<void> {
     const card = event.item.data;
-    const move = moveFor(card, event.container.data);
+    // CDK drops into the last legal column the pointer crossed: ignore a release elsewhere
+    // (e.g. OPEN dragged through PLANNED and released over DONE must not plan the work order)
+    const move = event.isPointerOverContainer ? moveFor(card, event.container.data) : null;
     if (!move) {
       return;
     }
