@@ -1,11 +1,16 @@
 <mat-toolbar class="topbar">
-  <mat-icon class="logo">factory</mat-icon>
+  @if (compact()) {
+    <button mat-icon-button (click)="sidenav.toggle()" aria-label="Menu"><mat-icon>menu</mat-icon></button>
+  } @else {
+    <mat-icon class="logo">factory</mat-icon>
+  }
   <span class="brand">AtelierFlow</span>
   <span class="spacer"></span>
 
   <span class="live" [class.on]="realtime.connected()"
         [matTooltip]="realtime.connected() ? 'Mises à jour en temps réel actives' : 'Temps réel déconnecté, reconnexion…'">
-    <span class="dot"></span>{{ realtime.connected() ? 'Temps réel' : 'Hors ligne' }}
+    <span class="dot"></span>
+    @if (!compact()) { {{ realtime.connected() ? 'Temps réel' : 'Hors ligne' }} }
   </span>
 
   @if (auth.user(); as user) {
@@ -24,10 +29,11 @@
 </mat-toolbar>
 
 <mat-sidenav-container class="container">
-  <mat-sidenav mode="side" opened class="sidenav">
+  <mat-sidenav #sidenav class="sidenav" [mode]="compact() ? 'over' : 'side'" [opened]="!compact()">
     <mat-nav-list>
       @for (link of links; track link.path) {
-        <a mat-list-item [routerLink]="link.path" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive">
+        <a mat-list-item [routerLink]="link.path" routerLinkActive #rla="routerLinkActive" [activated]="rla.isActive"
+           (click)="compact() && sidenav.close()">
           <mat-icon matListItemIcon>{{ link.icon }}</mat-icon>
           <span matListItemTitle>{{ link.label }}</span>
         </a>

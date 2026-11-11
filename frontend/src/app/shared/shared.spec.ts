@@ -37,6 +37,7 @@ describe('labels and dates', () => {
     expect(historyValueLabel('priority', 'URGENT')).toBe('Urgente');
     expect(historyValueLabel('title', 'Fuite')).toBe('Fuite');
     expect(historyValueLabel('assignee', null)).toBe('—');
+    expect(historyValueLabel('scheduledFor', '2026-11-20')).toBe('20/11/2026');
   });
 
   it('formats local dates as ISO days', () => {

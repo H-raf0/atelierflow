@@ -66,11 +66,13 @@ export class DashboardPage {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { display: false } },
+    // work orders are counted: no half ticks
+    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
   };
   protected readonly stackedOptions: ChartConfiguration<'bar'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
-    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } },
   };
   protected readonly horizontalOptions: ChartConfiguration<'bar'>['options'] = {
     indexAxis: 'y',

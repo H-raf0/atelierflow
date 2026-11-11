@@ -9,11 +9,13 @@ import {
   provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { MAT_DATE_LOCALE, provideNativeDateAdapter } from '@angular/material/core';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { provideApiConfiguration } from './api';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth/auth.interceptor';
 import { AuthService } from './core/auth/auth.service';
+import { FrenchPaginatorIntl } from './shared/french-paginator-intl';
 
 registerLocaleData(localeFr);
 
@@ -30,6 +32,7 @@ export const appConfig: ApplicationConfig = {
     provideNativeDateAdapter(),
     { provide: LOCALE_ID, useValue: 'fr' },
     { provide: MAT_DATE_LOCALE, useValue: 'fr-FR' },
+    { provide: MatPaginatorIntl, useClass: FrenchPaginatorIntl },
     // on a page reload the access token (kept in memory) is gone: try to renew it from the refresh cookie
     provideAppInitializer(() => inject(AuthService).restoreSession()),
   ],

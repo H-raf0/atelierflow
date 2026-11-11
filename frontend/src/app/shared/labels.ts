@@ -76,5 +76,9 @@ export function historyValueLabel(field: string, value: string | null): string {
   if (field === 'priority') {
     return PRIORITY_LABELS[value as Priority] ?? value;
   }
+  if (field === 'scheduledFor' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-');
+    return `${day}/${month}/${year}`;
+  }
   return value;
 }
