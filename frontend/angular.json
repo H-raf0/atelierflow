@@ -81,7 +81,8 @@
             "coverageReporters": [
               "text-summary",
               "lcov",
-              "html"
+              "html",
+              "json-summary"
             ],
             "coverageInclude": [
               "src/app/**/*.ts"
