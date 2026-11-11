@@ -29,7 +29,8 @@
         <div class="cards" cdkDropList [cdkDropListData]="column" [cdkDropListEnterPredicate]="canDrop"
              (cdkDropListDropped)="onDrop($event)">
           @for (card of byColumn()[column]; track card.id) {
-            <article class="card" cdkDrag [cdkDragData]="card" [attr.data-testid]="'card-' + card.reference">
+            <article class="card" cdkDrag [cdkDragData]="card" [attr.data-testid]="'card-' + card.reference"
+                     (cdkDragStarted)="dragStarted()" (cdkDragEnded)="dragEnded()">
               <div class="card-top">
                 <a class="reference" [routerLink]="['/work-orders', card.id]">{{ card.reference }}</a>
                 <span class="badge" [class]="'prio-' + card.priority">{{ priorityLabels[card.priority] }}</span>

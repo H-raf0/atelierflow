@@ -57,6 +57,19 @@ describe('BoardPage', () => {
     expect(column('OPEN').textContent).not.toContain('OT-00001');
   });
 
+  it('defers push events while a card is being dragged', async () => {
+    const board = fixture.componentInstance as unknown as { dragStarted(): void; dragEnded(): void };
+
+    board.dragStarted();
+    realtime.workOrders.next(workOrderSummary({ id: 3, reference: 'OT-00003' }));
+    await fixture.whenStable();
+    expect(column('OPEN').textContent).not.toContain('OT-00003');
+
+    board.dragEnded();
+    await fixture.whenStable();
+    expect(column('OPEN').textContent).toContain('OT-00003');
+  });
+
   it('adds cards created elsewhere', async () => {
     realtime.workOrders.next(workOrderSummary({ id: 3, reference: 'OT-00003' }));
     await fixture.whenStable();

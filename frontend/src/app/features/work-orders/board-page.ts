@@ -50,10 +50,30 @@ export class BoardPage {
   protected readonly loading = this.board.isLoading;
   protected readonly error = this.board.error;
 
+  /** Push events received while a card is held: applied on release, so the board never moves under the cursor. */
+  private dragging = false;
+  private deferred: WorkOrderSummary[] = [];
+
   constructor() {
     inject(RealtimeService)
       .workOrders$.pipe(takeUntilDestroyed())
-      .subscribe((card) => this.cards.update((cards) => upsert(cards, card)));
+      .subscribe((card) => (this.dragging ? this.deferred.push(card) : this.apply([card])));
+  }
+
+  protected dragStarted(): void {
+    this.dragging = true;
+  }
+
+  protected dragEnded(): void {
+    this.dragging = false;
+    this.apply(this.deferred);
+    this.deferred = [];
+  }
+
+  private apply(updates: WorkOrderSummary[]): void {
+    if (updates.length) {
+      this.cards.update((cards) => updates.reduce(upsert, cards));
+    }
   }
 
   /** CDK predicate: a column lights up as a drop target only if the move is legal. */
