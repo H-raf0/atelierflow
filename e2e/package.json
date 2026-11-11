@@ -1,0 +1,13 @@
+{
+  "name": "atelierflow-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "screenshots": "playwright test --project=screenshots"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^24.19.2",
+    "typescript": "~6.0.2"
+  }
+}
