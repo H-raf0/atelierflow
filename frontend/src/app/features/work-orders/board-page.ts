@@ -83,8 +83,11 @@ export class BoardPage {
   protected async onDrop(event: CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>): Promise<void> {
     const card = event.item.data;
     // CDK drops into the last legal column the pointer crossed: ignore a release elsewhere
-    // (e.g. OPEN dragged through PLANNED and released over DONE must not plan the work order)
-    const move = event.isPointerOverContainer ? moveFor(card, event.container.data) : null;
+    // (e.g. OPEN dragged through PLANNED and released over DONE must not plan the work order).
+    // Checked against the live geometry: CDK's isPointerOverContainer relies on positions cached when
+    // the drag started, which proved stale once the board had changed in the meantime.
+    const released = releasedOver(event.container.element.nativeElement, event.dropPoint);
+    const move = released ? moveFor(card, event.container.data) : null;
     if (!move) {
       return;
     }
@@ -108,4 +111,9 @@ export class BoardPage {
   protected reload(): void {
     this.board.reload();
   }
+}
+
+function releasedOver(element: HTMLElement, point: { x: number; y: number }): boolean {
+  const rect = element.getBoundingClientRect();
+  return point.x >= rect.left && point.x <= rect.right && point.y >= rect.top && point.y <= rect.bottom;
 }

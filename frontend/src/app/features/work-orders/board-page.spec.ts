@@ -38,9 +38,16 @@ describe('BoardPage', () => {
     onDrop(event: CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>): Promise<void>;
     canDrop(drag: CdkDrag<WorkOrderSummary>, drop: CdkDropList<BoardColumn>): boolean;
   };
-  const drop = (card: WorkOrderSummary, target: BoardColumn, isPointerOverContainer = true) =>
-    ({ item: { data: card }, container: { data: target }, isPointerOverContainer }) as
-      CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>;
+  /** A drop on `target`, released inside its area (100 × 100 px) unless `releasedInside` is false. */
+  const drop = (card: WorkOrderSummary, target: BoardColumn, releasedInside = true) =>
+    ({
+      item: { data: card },
+      container: {
+        data: target,
+        element: { nativeElement: { getBoundingClientRect: () => ({ left: 0, right: 100, top: 0, bottom: 100 }) } },
+      },
+      dropPoint: releasedInside ? { x: 50, y: 50 } : { x: 500, y: 50 },
+    }) as unknown as CdkDragDrop<BoardColumn, BoardColumn, WorkOrderSummary>;
 
   it('shows each card in the column of its status', () => {
     expect(column('OPEN').textContent).toContain('OT-00001');
