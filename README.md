@@ -167,9 +167,11 @@ atelierflow/
 
 ## Déploiement
 
-L'application se déploie gratuitement sur une VM Oracle Cloud *Always Free* : le même `docker compose`, plus
-Caddy pour le HTTPS automatique (`docker-compose.prod.yml`). Le guide [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md)
-détaille la marche à suivre, et le script `deploy/install.sh` installe tout en une commande sur le serveur.
+L'application se déploie sur un serveur Linux avec le même `docker compose`, complété par
+`docker-compose.prod.yml` : Caddy pour le HTTPS automatique (Let's Encrypt), secrets lus dans un fichier `.env`
+non versionné (modèle : `.env.example`), cookie de session `Secure` et redémarrage automatique des conteneurs.
+Sur un serveur Ubuntu neuf, `deploy/install.sh <domaine>` installe Docker, ouvre les ports 80/443, génère les
+secrets et démarre l'application.
 
 ## Configuration
 
