@@ -13,6 +13,8 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:8080',
+    // to run against a local HTTPS proxy with a self-signed certificate
+    ignoreHTTPSErrors: process.env.E2E_IGNORE_HTTPS_ERRORS === 'true',
     locale: 'fr-FR',
     timezoneId: 'Europe/Paris',
     trace: 'retain-on-failure',

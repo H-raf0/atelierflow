@@ -30,6 +30,11 @@ atelierflow:
     refresh-cookie-secure: ${REFRESH_COOKIE_SECURE:true}
     cors-allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
+server:
+  # Behind nginx/Caddy: trust X-Forwarded-Proto from the private network, so that the backend knows the
+  # browser used HTTPS (WebSocket same-origin check, generated URLs).
+  forward-headers-strategy: native
+
 management:
   endpoints:
     web:

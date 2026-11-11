@@ -1,0 +1,41 @@
+# Public deployment on a single server, on top of docker-compose.yml:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Caddy terminates HTTPS (automatic Let's Encrypt certificate for $DOMAIN) and forwards to nginx.
+# Secrets come from the .env file next to this file (see .env.example) — never committed.
+services:
+  postgres:
+    restart: unless-stopped
+
+  backend:
+    restart: unless-stopped
+    environment:
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      REFRESH_COOKIE_SECURE: "true"
+
+  frontend:
+    restart: unless-stopped
+    # only reachable through Caddy
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.10-alpine
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      frontend:
+        condition: service_started
+
+volumes:
+  caddy-data:
+  caddy-config:

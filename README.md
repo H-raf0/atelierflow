@@ -98,7 +98,7 @@ Tous les chiffres ci-dessous viennent de la dernière exécution locale :
 | Suite | Contenu | Résultat |
 |---|---|---|
 | Backend (`./mvnw verify`) | unitaires (machine à états : les 25 transitions), intégration MockMvc sur PostgreSQL Testcontainers, autorisations avec de vrais JWT, WebSocket avec un vrai client STOMP, KPI sur un jeu de données calculé à la main, ArchUnit | **176 tests verts**, couverture JaCoCo **97,5 % des lignes**, **84,6 % des branches** |
-| Frontend (`npm run test:ci`) | interceptor (refresh puis rejeu), guards, logique du kanban, composants (kanban, fiche OT, parc, dialogues), service STOMP | **63 tests verts**, couverture **79,7 % des lignes** (tout `src/app`, hors client généré) |
+| Frontend (`npm run test:ci`) | interceptor (refresh puis rejeu), guards, logique du kanban, composants (kanban, fiche OT, parc, dialogues), service STOMP | **64 tests verts**, couverture **80,0 % des lignes** (tout `src/app`, hors client généré) |
 | End-to-end (Playwright) | parcours 1 : connexion ; parcours 2 : cycle de vie complet d'un OT sur le kanban, dans deux navigateurs (responsable et technicien) | **6 tests verts** |
 
 Quelques points testés explicitement :
@@ -134,7 +134,8 @@ atelierflow/
 ├── frontend/    Angular — core/ (auth, temps réel, layout), shared/, features/ (routes lazy), api/ (généré)
 ├── e2e/         Playwright
 ├── docs/        ARCHITECTURE.md, captures d'écran
-├── docker-compose.yml
+├── deploy/      Caddyfile, script d'installation du serveur
+├── docker-compose.yml, docker-compose.prod.yml
 └── .github/workflows/ci.yml
 ```
 
@@ -163,6 +164,12 @@ atelierflow/
   (`resource()`, `computed`), les messages WebSocket des `Observable`.
 - **Client API généré** : le contrat OpenAPI est exporté par un test backend, le client TypeScript en est
   généré, et la CI vérifie qu'ils restent synchronisés.
+
+## Déploiement
+
+L'application se déploie gratuitement sur une VM Oracle Cloud *Always Free* : le même `docker compose`, plus
+Caddy pour le HTTPS automatique (`docker-compose.prod.yml`). Le guide [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md)
+détaille la marche à suivre, et le script `deploy/install.sh` installe tout en une commande sur le serveur.
 
 ## Configuration
 
